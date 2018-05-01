@@ -3,21 +3,21 @@
 import numpy as np
 from .node import Mul, Active, Loss, SMul, SAdd, Num
 
-class NeuralNetwork:
 
+class NeuralNetwork:
     def __init__(self, sizes, read=False, active='sigmoid', loss='se'):
-        self.losses = [] # keep data to plot graph
-        self.parameter = {} # store parametres to dump
+        self.losses = []  # keep data to plot graph
+        self.parameter = {}  # store parametres to dump
         self.sizes = sizes
         x = Input(np.zeros(sizes[0]))
-        for index in range(len(sizes)-1):
+        for index in range(len(sizes) - 1):
             key = 'w{0}'.format(index)
             if read:
-                # TODO
-                # read model from file
-                pass
+                # TODO read model from file
+                break
             else:
-                self.parametre[key] = np.random.randn(sizes[index], sizes[index+1])
+                self.parametre[key] = np.random.randn(sizes[index],
+                                                      sizes[index + 1])
             w = Weight(self.parametre[key])
             a = Mul(x, w)
             z = Active(a, active)
@@ -40,10 +40,24 @@ class NeuralNetwork:
         # TODO
         pass
 
+
 # A simple computation graph
 class TestNetwork:
-
     def __init__(self):
+        """
+        A simple computation graph like this
+        x ---
+             \
+             * ---
+             /    \
+        2 ---      |
+                   + ---> z
+        y ---      |
+             \    /
+             * ---
+             /
+        3 ---
+        """
         x = Num(0)
         cx = Num(2)
         xn = SMul(x, cx)
