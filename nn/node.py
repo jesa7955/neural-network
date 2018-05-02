@@ -2,10 +2,13 @@
 
 import numpy as np
 
-from .function import softmax, sigmoid, se_loss
+from .function import sigmoid, sigmoid_prime, se_loss
 
 
 class Node(object):
+    def __init__(self):
+        pass
+
     def forward(self):
         pass
 
@@ -14,9 +17,8 @@ class Node(object):
 
 
 class Input(Node):
-    def __init__(self, x):
-        self._x = x
-        self._x  # TODO add a 1 for bias
+    def __init__(self):
+        self._x = None
 
     def set(self, x):
         self._x = x
@@ -25,68 +27,79 @@ class Input(Node):
         return self._x
 
     def backward(self, dz):
-        print('i am here at the end')
+        # recursion ends here
         return
 
 
 class Weight(Node):
-    def __init__(self, w):
+    def __init__(self, w, rate):
         self._w = w
-        self._w  # add a 0 for bias
+        self._rate = rate
 
     def forward(self):
         return self._w
 
     def backward(self, dz):
-        # TODO
-        pass
+        self._w -= self._rate * dz
+        # recursion ends here too
+        return
 
 
 class Mul(Node):
-    def __init__(self, node1, node2):
+    def __init__(self, node1, node2, bias, rate):
         self._node1 = node1
         self._node2 = node2
+        self._bias = bias
+        self._rate = rate
         self._x, self._y = None, None
         self._dx, self._dy = None, None
 
     def forward(self):
-        self._x = node1.forward()
-        self._y = node2.forward()
-        self._z = np.dot(self._x, self._y)
+        self._x = self._node1.forward()
+        self._y = self._node2.forward()
+        self._z = np.dot(self._x, self._y) + self._bias
         return self._z
 
     def backward(self, dz):
-        self._dx = np.dot(self._y.T, dz)
-        self._dy = np.dot(dz, self._x.T)
+        self._bias -= self._rate * dz
+        self._dx = np.dot(dz, self._y.T)
+        self._dy = np.dot(self._x.T, dz)
         self._node1.backward(self._dx)
         self._node2.backward(self._dy)
-        pass
 
 
-class Loss(Node):
-    def __init__(self, prev, func):
+class SELoss(Node):
+    def __init__(self, prev):
         self._prev = prev
-        self._func = func
+        self._t, self._p = None, None
 
-    def forward(self):
-        return self._func(self._prev.forward())
+    def forward(self, guess, correct):
+        self._t = correct
+        self._p, _loss = se_loss(guess, correct)
+        return _loss
 
-    def backward(self, dz):
-        # TODO
-        pass
+    def backward(self):
+        dl = self._p - self._t
+        self._prev.backward(dl)
 
 
 class Active(Node):
-    def __init__(self, prev, func):
+    def __init__(self, prev, func='sigmoid'):
         self._prev = prev
-        self._func = func
+        if func == 'sigmoid':
+            self._f = sigmoid
+            self._df = sigmoid_prime
+        self._in, self._out = None, None
 
     def forward(self):
-        return self._func(self._prev.forward())
+        self._in = self._prev.forward()
+        self._out = self._f(self._in)
+        return self._out
 
     def backward(self, dz):
-        # TODO
-        pass
+        dout = self._df(self._in)
+        dout *= dz
+        self._prev.backward(dout)
 
 
 # Add, SMul, SNum for test

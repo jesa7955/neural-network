@@ -1,44 +1,53 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from .node import Mul, Active, Loss, SMul, SAdd, Num
+#import matplotlib.pyplot as plt
+from .node import Mul, Active, SELoss, SMul, SAdd, Num, Input, Weight
 
 
 class NeuralNetwork:
-    def __init__(self, sizes, read=False, active='sigmoid', loss='se'):
-        self.losses = []  # keep data to plot graph
-        self.parameter = {}  # store parametres to dump
+    def __init__(self, sizes, l_rate, read=False, active='sigmoid', loss='se'):
         self.sizes = sizes
-        x = Input(np.zeros(sizes[0]))
+        self.losses = []  # keep data to plot graph
+        self.parameter = {}  # store parameters to dump
+        self.parameter['l_rate'] = l_rate
+        x = Input()
+        self.input = x
         for index in range(len(sizes) - 1):
-            key = 'w{0}'.format(index)
+            w_key = 'w{0}'.format(index)
+            b_key = 'b{0}'.format(index)
             if read:
                 # TODO read model from file
                 break
             else:
-                self.parametre[key] = np.random.randn(sizes[index],
-                                                      sizes[index + 1])
-            w = Weight(self.parametre[key])
-            a = Mul(x, w)
-            z = Active(a, active)
+                self.parameter[w_key] = np.random.randn(sizes[index + 1],
+                                                        sizes[index])
+                self.parameter[b_key] = np.random.randn(sizes[index + 1], 1)
+            w = Weight(self.parameter[w_key], l_rate)
+            a = Mul(w, x, self.parameter[b_key], l_rate)
+            if index == len(sizes) - 2:
+                z = a
+            else:
+                z = Active(a, active)
             x = z
-        self.loss = Loss(z, loss)
+        if loss == 'se':
+            self.loss = SELoss(z)
         self.end = z
-
-    def fit(self, x, correct):
-        guess = self.predict(x)
-        loss = self.loss.forward(correct, guess)
-        self.losses.append(loss)
-        self.end.backward(correct, guess)
 
     def predict(self, x):
         self.input.set(x)
         return self.end.forward()
 
-    def plot(self):
-        # Plot self.losses
-        # TODO
-        pass
+    def fit(self, x, correct):
+        guess = self.predict(x)
+        loss = self.loss.forward(guess, correct)
+        self.losses.append(loss)
+        self.loss.backward()
+
+    #def plot(self):
+    #    # Plot self.losses
+    #    plt.plot(self.losses)
+    #    plt.show()
 
 
 # A simple computation graph
