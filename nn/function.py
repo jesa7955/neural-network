@@ -5,7 +5,7 @@ import numpy as np
 
 def softmax(x):
     """The softmax function"""
-    exp_x = np.exp(x)
+    exp_x = np.exp(x - np.max(x))
     sum_exp_x = np.sum(exp_x)
     return exp_x / sum_exp_x
 

@@ -42,7 +42,25 @@ class Weight(Node):
     def backward(self, dz):
         self._w -= self._rate * dz
         # recursion ends here too
-        return
+
+
+class Active(Node):
+    def __init__(self, prev, func='sigmoid'):
+        self._prev = prev
+        if func == 'sigmoid':
+            self._f = sigmoid
+            self._df = sigmoid_prime
+        self._in, self._out = None, None
+
+    def forward(self):
+        self._in = self._prev.forward()
+        self._out = self._f(self._in)
+        return self._out
+
+    def backward(self, dz):
+        dout = self._df(self._in)
+        dout = dz * dout
+        self._prev.backward(dout)
 
 
 class Mul(Node):
@@ -81,25 +99,6 @@ class SELoss(Node):
     def backward(self):
         dl = self._p - self._t
         self._prev.backward(dl)
-
-
-class Active(Node):
-    def __init__(self, prev, func='sigmoid'):
-        self._prev = prev
-        if func == 'sigmoid':
-            self._f = sigmoid
-            self._df = sigmoid_prime
-        self._in, self._out = None, None
-
-    def forward(self):
-        self._in = self._prev.forward()
-        self._out = self._f(self._in)
-        return self._out
-
-    def backward(self, dz):
-        dout = self._df(self._in)
-        dout *= dz
-        self._prev.backward(dout)
 
 
 # Add, SMul, SNum for test

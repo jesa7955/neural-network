@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from .node import Mul, Active, SELoss, SMul, SAdd, Num, Input, Weight
 
 
@@ -29,7 +29,7 @@ class NeuralNetwork:
                 z = a
             else:
                 z = Active(a, active)
-            x = z
+                x = z
         if loss == 'se':
             self.loss = SELoss(z)
         self.end = z
@@ -44,10 +44,9 @@ class NeuralNetwork:
         self.losses.append(loss)
         self.loss.backward()
 
-    #def plot(self):
-    #    # Plot self.losses
-    #    plt.plot(self.losses)
-    #    plt.show()
+    def plot(self):
+        plt.plot(self.losses)
+        plt.show()
 
 
 # A simple computation graph
